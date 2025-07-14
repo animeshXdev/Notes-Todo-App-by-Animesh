@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const JWT_SECRET = process.env.JWT_SECRET!
 
 async function getUserIdFromToken(): Promise<string | null> {
-  const token = (await cookies()).get('token')?.value
+  const token = cookies().get('token')?.value
   if (!token) return null
 
   try {
