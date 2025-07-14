@@ -1,0 +1,67 @@
+import { connectToDB } from '@/lib/db'
+import Note from '@/models/note.model'
+import jwt from 'jsonwebtoken'
+import { cookies } from 'next/headers'
+import mongoose from 'mongoose'
+import { NextResponse } from 'next/server'
+
+const JWT_SECRET = process.env.JWT_SECRET!
+
+async function getUserIdFromToken(): Promise<string | null> {
+  const token = (await cookies()).get('token')?.value
+  if (!token) return null
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string }
+    return decoded.userId
+  } catch {
+    return null
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  await connectToDB()
+  const userId = await getUserIdFromToken()
+  const { id } = params
+
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
+  }
+
+  const { title, content } = await req.json()
+
+  const updated = await Note.findOneAndUpdate(
+    { _id: id, userId },
+    { title, content },
+    { new: true }
+  )
+
+  if (!updated) return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+
+  return NextResponse.json(updated)
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  await connectToDB()
+  const userId = await getUserIdFromToken()
+  const { id } = params
+
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
+  }
+
+  const deleted = await Note.findOneAndDelete({ _id: id, userId })
+
+  if (!deleted) return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+
+  return NextResponse.json({ message: 'Note deleted successfully' })
+}
+

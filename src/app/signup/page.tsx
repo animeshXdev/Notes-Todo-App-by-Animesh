@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -9,15 +10,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
-const schema = z.object({
-  email: z.string().email({ message: 'Valid email required' }),
-  password: z.string().min(6, { message: 'Minimum 6 characters' }),
-})
+const schema = z
+  .object({
+    email: z.string().email({ message: 'Enter a valid email' }),
+    password: z.string().min(6, { message: 'Minimum 6 characters' }),
+    confirmPassword: z.string().min(6),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
 
 type FormData = z.infer<typeof schema>
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter()
 
   const {
@@ -30,20 +38,22 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       })
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.message || 'Login failed')
+        throw new Error(error.message || 'Signup failed')
       }
 
-      toast.success('Login successful!')
-      router.push('/dashboard/notes')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toast.success('Signup successful! Redirecting...')
+      router.push('/dashboard')
     } catch (err: any) {
       toast.error(err.message)
     }
@@ -57,7 +67,7 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        Notes / Todo App <span className="text-primary">by Animesh</span>
+        Join <span className="text-primary">Notes / ToDo App</span> by Animesh
       </motion.h1>
 
       <motion.div
@@ -69,7 +79,7 @@ export default function LoginPage() {
         <Card className="p-4 shadow-lg">
           <CardContent>
             <h2 className="text-xl font-semibold mb-4 text-center">
-              Login to Continue
+              Create your account
             </h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -99,19 +109,28 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Logging in...' : 'Login'}
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  {...register('confirmPassword')}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive mt-1">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating account...' : 'Signup'}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground mt-2">
-                Don&apos;t have an account?{' '}
-                <a href="/signup" className="text-primary hover:underline">
-                  Signup
-                </a>
+                Already have an account?{' '}
+                <Link href="/" className="text-primary hover:underline">
+                  Login
+                </Link>
               </p>
             </form>
           </CardContent>
