@@ -19,7 +19,7 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
-// ✅ PATCH handler
+// ✅ PATCH Handler
 export async function PATCH(
   req: NextRequest,
   context: { params: { id: string } }
@@ -49,7 +49,7 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-// ✅ DELETE handler
+// ✅ DELETE Handler
 export async function DELETE(
   req: NextRequest,
   context: { params: { id: string } }
