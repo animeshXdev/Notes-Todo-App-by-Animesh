@@ -19,7 +19,7 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
-// ✅ PATCH handler — Update Note
+// ✅ PATCH handler
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -46,7 +46,7 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-// ✅ DELETE handler — Delete Note
+// ✅ DELETE handler
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
