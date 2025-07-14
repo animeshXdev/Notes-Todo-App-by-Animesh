@@ -53,7 +53,7 @@ export default function SignupPage() {
       }
 
       toast.success('Signup successful! Redirecting...')
-      router.push('/login')
+      router.push('/')
     } catch (err: any) {
       toast.error(err.message)
     }
