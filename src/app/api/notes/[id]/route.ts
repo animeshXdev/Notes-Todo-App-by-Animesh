@@ -21,20 +21,21 @@ async function getUserIdFromToken(): Promise<string | null> {
 
 // ✅ PATCH handler
 export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Record<string, string> }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const id = params.id
+  const { id } = context.params
 
   if (!userId)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
   }
 
-  const { title, content } = await request.json()
+  const { title, content } = await req.json()
 
   const updated = await Note.findOneAndUpdate(
     { _id: id, userId },
@@ -50,15 +51,16 @@ export async function PATCH(
 
 // ✅ DELETE handler
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Record<string, string> }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const id = params.id
+  const { id } = context.params
 
   if (!userId)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
   }
