@@ -5,6 +5,13 @@ import { cookies } from 'next/headers'
 import mongoose from 'mongoose'
 import { NextRequest, NextResponse } from 'next/server'
 
+// ✅ Proper context typing (Next.js 15+)
+interface RouteContext {
+  params: {
+    id: string
+  }
+}
+
 const JWT_SECRET = process.env.JWT_SECRET!
 
 async function getUserIdFromToken(): Promise<string | null> {
@@ -19,11 +26,7 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
-// ✅ PATCH Handler
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   await connectToDB()
   const userId = await getUserIdFromToken()
   const { id } = context.params
@@ -49,11 +52,7 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-// ✅ DELETE Handler
-export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   await connectToDB()
   const userId = await getUserIdFromToken()
   const { id } = context.params
