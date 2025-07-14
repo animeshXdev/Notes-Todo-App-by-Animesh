@@ -19,20 +19,22 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
+// ✅ PATCH handler
 export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Record<string, string> }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const id = context.params.id
+  const id = params.id
 
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
   }
 
-  const { title, content } = await req.json()
+  const { title, content } = await request.json()
 
   const updated = await Note.findOneAndUpdate(
     { _id: id, userId },
@@ -40,27 +42,31 @@ export async function PATCH(
     { new: true }
   )
 
-  if (!updated) return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+  if (!updated)
+    return NextResponse.json({ error: 'Note not found' }, { status: 404 })
 
   return NextResponse.json(updated)
 }
 
+// ✅ DELETE handler
 export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Record<string, string> }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const id = context.params.id
+  const id = params.id
 
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: 'Invalid Note ID' }, { status: 400 })
   }
 
   const deleted = await Note.findOneAndDelete({ _id: id, userId })
 
-  if (!deleted) return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+  if (!deleted)
+    return NextResponse.json({ error: 'Note not found' }, { status: 404 })
 
   return NextResponse.json({ message: 'Note deleted successfully' })
 }
