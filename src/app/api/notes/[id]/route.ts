@@ -3,7 +3,7 @@ import Note from '@/models/note.model'
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 import mongoose from 'mongoose'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const JWT_SECRET = process.env.JWT_SECRET!
 
@@ -19,8 +19,9 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
+// ✅ PATCH handler — Update Note
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   await connectToDB()
@@ -45,8 +46,9 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
+// ✅ DELETE handler — Delete Note
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   await connectToDB()
@@ -64,4 +66,3 @@ export async function DELETE(
 
   return NextResponse.json({ message: 'Note deleted successfully' })
 }
-
