@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectToDB } from '@/lib/db'
 import Todo from '@/models/todo.model'
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 const JWT_SECRET = process.env.JWT_SECRET!
 
@@ -18,14 +19,16 @@ async function getUserIdFromToken(): Promise<string | null> {
 }
 
 // ✏️ Update ToDo
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: any) {
   await connectToDB()
   const userId = await getUserIdFromToken()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { id } = context.params
   const { text, completed } = await req.json()
+
   const updated = await Todo.findOneAndUpdate(
-    { _id: params.id, userId },
+    { _id: id, userId },
     { ...(text && { text }), ...(completed !== undefined && { completed }) },
     { new: true }
   )
@@ -35,13 +38,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 // 🗑 Delete ToDo
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, context: any) {
   await connectToDB()
   const userId = await getUserIdFromToken()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const deleted = await Todo.findOneAndDelete({ _id: params.id, userId })
-  if (!deleted) return NextResponse.json({ error: 'Todo not found' }, { status: 404 })
+  const { id } = context.params
+  const deleted = await Todo.findOneAndDelete({ _id: id, userId })
 
+  if (!deleted) return NextResponse.json({ error: 'Todo not found' }, { status: 404 })
   return NextResponse.json({ message: 'Deleted successfully' })
 }
