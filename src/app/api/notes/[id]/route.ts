@@ -19,14 +19,13 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
-// ✅ PATCH handler
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const { id } = params
+  const id = context.params.id
 
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -46,14 +45,13 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-// ✅ DELETE handler
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const { id } = params
+  const id = context.params.id
 
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!mongoose.Types.ObjectId.isValid(id)) {
