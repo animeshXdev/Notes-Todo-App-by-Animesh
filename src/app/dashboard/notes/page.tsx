@@ -6,14 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { motion } from 'framer-motion'
 import LogoutButton from '@/components/LogoutButton'
 import DashboardToggle from '@/components/DashboardToggle'
-
-
-
-
-
 
 type Note = {
   _id: string
@@ -27,6 +23,7 @@ export default function DashboardPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null) // 👈 For modal
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -46,9 +43,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content }),
       })
-
       if (!res.ok) return toast.error('Update failed')
-
       const updated = await res.json()
       setNotes(notes.map((note) => (note._id === editingId ? updated : note)))
       toast.success('Note updated!')
@@ -59,9 +54,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, content }),
       })
-
       if (!res.ok) return toast.error('Failed to create note')
-
       const newNote = await res.json()
       setNotes([newNote, ...notes])
       toast.success('Note added!')
@@ -80,7 +73,6 @@ export default function DashboardPage() {
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' })
     if (!res.ok) return toast.error('Delete failed')
-
     setNotes(notes.filter((note) => note._id !== id))
     toast.success('Note deleted!')
   }
@@ -131,6 +123,7 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* 🧾 Notes Grid */}
       <div className="grid gap-4 mt-8 sm:grid-cols-2 md:grid-cols-3">
         {notes.map((note) => (
           <motion.div
@@ -141,29 +134,40 @@ export default function DashboardPage() {
           >
             <Card className="p-4 bg-card text-card-foreground shadow transition-colors">
               <h2 className="font-bold text-lg">{note.title}</h2>
-              <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
+              <p className="mt-2 text-muted-foreground text-sm line-clamp-3">
                 {note.content}
               </p>
               <p className="text-xs mt-3 text-muted-foreground">
                 {new Date(note.createdAt).toLocaleString()}
               </p>
 
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-wrap gap-2 mt-4">
                 <Button size="sm" onClick={() => handleEdit(note)}>
                   📝 Edit
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(note._id)}
-                >
+                <Button size="sm" variant="destructive" onClick={() => handleDelete(note._id)}>
                   🗑 Delete
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setSelectedNote(note)}>
+                  👁 View More
                 </Button>
               </div>
             </Card>
           </motion.div>
         ))}
       </div>
+
+      {/* 📄 Modal for full note view */}
+      <Dialog open={!!selectedNote} onOpenChange={() => setSelectedNote(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedNote?.title}</DialogTitle>
+          </DialogHeader>
+          <p className="whitespace-pre-wrap mt-2 text-muted-foreground">
+            {selectedNote?.content}
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
