@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectToDB } from '@/lib/db'
 import Note from '@/models/note.model'
 import jwt from 'jsonwebtoken'
@@ -19,13 +20,10 @@ async function getUserIdFromToken(): Promise<string | null> {
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: any) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const { id } = params
+  const { id } = context.params
 
   if (!userId)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -48,13 +46,10 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: any) {
   await connectToDB()
   const userId = await getUserIdFromToken()
-  const { id } = params
+  const { id } = context.params
 
   if (!userId)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
