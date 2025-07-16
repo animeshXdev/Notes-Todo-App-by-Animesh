@@ -1,26 +1,34 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
+import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get('token')?.value
+  const token = req.cookies.get('token')?.value;
+  const url = req.nextUrl;
 
-  const isDashboardRoute = req.nextUrl.pathname.startsWith('/dashboard')
+  const isDashboardRoute = url.pathname.startsWith('/dashboard');
 
-  if (!token && isDashboardRoute) {
-    return NextResponse.redirect(new URL('/', req.url)) // Not logged in
+  // 🔒 If accessing protected route and no token found
+  if (isDashboardRoute && !token) {
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
-  try {
-    jwt.verify(token!, JWT_SECRET) // Verify token
-    return NextResponse.next() // Allow access
-  } catch (err) {
-    return NextResponse.redirect(new URL('/', req.url)) // Invalid token
+  // 🔐 If token exists, try verifying
+  if (token) {
+    try {
+      jwt.verify(token, JWT_SECRET);
+      return NextResponse.next();
+    } catch (err) {
+      console.error('❌ Invalid token:', err);
+      return NextResponse.redirect(new URL('/', req.url));
+    }
   }
+
+  // ✅ For all other routes, allow access
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: ['/dashboard/:path*'], // Protect all /dashboard routes
-}
+};

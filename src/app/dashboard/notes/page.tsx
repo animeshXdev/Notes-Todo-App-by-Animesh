@@ -23,13 +23,20 @@ export default function DashboardPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null) // 👈 For modal
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
 
   useEffect(() => {
     const fetchNotes = async () => {
-      const res = await fetch('/api/notes')
-      const data = await res.json()
-      setNotes(data)
+      try {
+        const res = await fetch('/api/notes', {
+          credentials: 'include',
+        })
+        const data = await res.json()
+        setNotes(data)
+      } catch (err) {
+        toast.error('Failed to fetch notes')
+        console.error(err)
+      }
     }
     fetchNotes()
   }, [])
@@ -37,31 +44,42 @@ export default function DashboardPage() {
   const handleSaveNote = async () => {
     if (!title || !content) return toast.error('Title & content required')
 
-    if (editingId) {
-      const res = await fetch(`/api/notes/${editingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
-      })
-      if (!res.ok) return toast.error('Update failed')
-      const updated = await res.json()
-      setNotes(notes.map((note) => (note._id === editingId ? updated : note)))
-      toast.success('Note updated!')
-      setEditingId(null)
-    } else {
-      const res = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
-      })
-      if (!res.ok) return toast.error('Failed to create note')
-      const newNote = await res.json()
-      setNotes([newNote, ...notes])
-      toast.success('Note added!')
-    }
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/notes/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title, content }),
+        })
 
-    setTitle('')
-    setContent('')
+        if (!res.ok) return toast.error('Update failed')
+
+        const updated = await res.json()
+        setNotes(notes.map((note) => (note._id === editingId ? updated : note)))
+        toast.success('Note updated!')
+        setEditingId(null)
+      } else {
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title, content }),
+        })
+
+        if (!res.ok) return toast.error('Failed to create note')
+
+        const newNote = await res.json()
+        setNotes([newNote, ...notes])
+        toast.success('Note added!')
+      }
+
+      setTitle('')
+      setContent('')
+    } catch (err) {
+      toast.error('Error saving note')
+      console.error(err)
+    }
   }
 
   const handleEdit = (note: Note) => {
@@ -71,10 +89,20 @@ export default function DashboardPage() {
   }
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' })
-    if (!res.ok) return toast.error('Delete failed')
-    setNotes(notes.filter((note) => note._id !== id))
-    toast.success('Note deleted!')
+    try {
+      const res = await fetch(`/api/notes/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (!res.ok) return toast.error('Delete failed')
+
+      setNotes(notes.filter((note) => note._id !== id))
+      toast.success('Note deleted!')
+    } catch (err) {
+      toast.error('Error deleting note')
+      console.error(err)
+    }
   }
 
   return (
@@ -104,7 +132,11 @@ export default function DashboardPage() {
           className="min-h-[100px]"
         />
 
-        <Button onClick={handleSaveNote} className="w-full">
+        <Button
+          onClick={handleSaveNote}
+          className="w-full"
+          disabled={!title || !content}
+        >
           {editingId ? '✅ Update Note' : '➕ Add Note'}
         </Button>
 
