@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,6 +21,17 @@ type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
   const router = useRouter()
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    const checkLogin = async () => {
+      const res = await fetch('/api/auth/check')
+      if (res.ok) {
+        router.replace('/dashboard/notes')
+      }
+    }
+    checkLogin()
+  }, [router])
 
   const {
     register,
@@ -43,7 +56,6 @@ export default function LoginPage() {
 
       toast.success('Login successful!')
       router.push('/dashboard/notes')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.message)
     }
