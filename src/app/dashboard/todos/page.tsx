@@ -135,7 +135,7 @@ export default function TodosPage() {
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               <Button size="sm" onClick={() => toggleCompleted(todo._id, todo.completed)}>
-                {todo.completed ? '🔄 Mark Incomplete' : '✅ Mark Complete'}
+                {todo.completed ? '🔄 Undo' : '✅ Done'}
               </Button>
               <Button size="sm" onClick={() => handleEdit(todo)}>✏️ Edit</Button>
               <Button size="sm" variant="destructive" onClick={() => handleDelete(todo._id)}>
